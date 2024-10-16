@@ -20,13 +20,25 @@ namespace HMSApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctors()
+        public async Task<ActionResult<IEnumerable<DoctorViewModel>>> GetDoctors()
         {
-            return await _context.Set<Doctor>().Include(d => d.Appointments).ToListAsync();
+            var doctors = await _context.Set<Doctor>().Include(d => d.Appointments).ToListAsync();
+
+            var doctorViewModels = doctors.Select(doctor => new DoctorViewModel
+            {
+                id = doctor.DoctorId,
+                Name = doctor.Name,
+                Contactno = doctor.Contactno,
+                Address = doctor.Address,
+                MedicalHistory = doctor.MedicalHistory,
+                DoctorImgBase64 = doctor.doctorImg != null ? Convert.ToBase64String(doctor.doctorImg) : null
+            }).ToList();
+
+            return doctorViewModels;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Doctor>> GetDoctor(Guid id)
+        public async Task<ActionResult<DoctorViewModel>> GetDoctor(Guid id)
         {
             var doctor = await _context.Set<Doctor>().Include(d => d.Appointments).FirstOrDefaultAsync(d => d.DoctorId == id);
 
@@ -35,7 +47,17 @@ namespace HMSApi.Controllers
                 return NotFound();
             }
 
-            return doctor;
+            var doctorViewModel = new DoctorViewModel
+            {
+                id = doctor.DoctorId,
+                Name = doctor.Name,
+                Contactno = doctor.Contactno,
+                Address = doctor.Address,
+                MedicalHistory = doctor.MedicalHistory,
+                DoctorImgBase64 = doctor.doctorImg != null ? Convert.ToBase64String(doctor.doctorImg) : null
+            };
+
+            return doctorViewModel;
         }
 
         [HttpPost]
